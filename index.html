@@ -8,14 +8,17 @@
 <style>
 :root{color-scheme:dark;--bg:#0b1410;--panel:#121f18;--line:#22332a;--ink:#eef1ea;--mute:#93a598;--dim:#5f7366;--cu:#e08a4a;--vine:#8fd3a6}
 *{box-sizing:border-box;min-width:0}
+html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
-.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;max-width:1260px;margin:0 auto;padding:clamp(14px,2.4vw,32px) max(4vw,16px)}
-.head{grid-column:1/-1;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:16px}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);height:100vh;height:100dvh;gap:20px 24px;max-width:1320px;margin:0 auto;padding:clamp(14px,2.4vw,32px) max(4vw,16px)}
+.head{grid-column:1/-1;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.mapcell{min-height:0;display:flex}
+details.about{font-size:12px;color:var(--dim);line-height:1.5}details.about summary{cursor:pointer;color:var(--mute);font-size:12px;padding:4px 0}
 h1{font:700 clamp(26px,3vw,36px)/1.05 "Inter Tight",sans-serif;margin:0;letter-spacing:-.01em}
 .kpis{display:flex;gap:28px}
 .kpi b{display:block;font:600 26px/1 "Inter Tight",sans-serif;font-variant-numeric:tabular-nums}
 .kpi span{font-size:12px;color:var(--mute)}
-.fig{position:relative;width:100%;height:clamp(420px,calc(100vh - 170px),860px)}
+.fig{position:relative;width:100%;height:100%;min-height:380px}
 .fig{overflow:hidden;border-radius:14px}.stage{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
 .fig canvas,.fig svg{position:absolute;inset:0;width:100%;height:100%}
 .reset{position:absolute;right:12px;top:12px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgba(11,20,16,.85);color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer}
@@ -34,7 +37,7 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 .lg{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:8px}
 .lgl{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:4px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
-.col{display:grid;gap:14px;align-content:start;max-height:clamp(420px,calc(100vh - 170px),860px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#22332a transparent;padding-right:4px}
+.col{display:grid;gap:14px;align-content:start;max-height:100%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#22332a transparent;padding-right:4px}
 .search{display:flex;gap:8px}
 .search input{flex:1;width:100%;font:16px Inter,sans-serif;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:0 12px}
 .search button{min-height:44px;padding:0 14px;border-radius:10px;border:0;background:var(--cu);color:#1b0f06;font:600 14px Inter,sans-serif;cursor:pointer}
@@ -54,7 +57,7 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 @media(hover:none){.hz{display:none}}
 .err{color:#f2a07a;font-size:13px;min-height:18px;margin:6px 0 0}
 .foot{grid-column:1/-1;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
-@media(max-width:880px){.col{max-height:none;overflow:visible;padding-right:0}.fig{height:auto;aspect-ratio:.86}.app{grid-template-columns:minmax(0,1fr);gap:20px}.wk{font-size:40px}.kpis{gap:18px}.kpi b{font-size:22px}.read{font-size:11px}.reset{top:8px;right:8px}}
+@media(max-width:880px){.app{height:auto;grid-template-rows:none}.mapcell{display:block}.col{max-height:none;overflow:visible;padding-right:0}.fig{height:auto;aspect-ratio:.86}.app{grid-template-columns:minmax(0,1fr);gap:20px}.wk{font-size:40px}.kpis{gap:18px}.kpi b{font-size:22px}.read{font-size:11px}.reset{top:8px;right:8px}}
 </style>
 </head>
 <body>
@@ -63,7 +66,7 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 <div><h1>Japanese beetle pressure, Minnesota</h1><p class="k" style="margin:6px 0 0">Simulated data · Shawn</p></div>
 <div class="kpis"><div class="kpi"><b id="k1">0</b><span>State average</span></div><div class="kpi"><b id="k2">0</b><span>Sites at 60+</span></div><div class="kpi"><b id="k3">0</b><span>Hot-spot counties (20+)</span></div></div>
 </div>
-<div>
+<div class="mapcell">
 <div class="fig" id="fig"><div class="stage" id="stage"><canvas id="cv"></canvas><svg id="ov" role="img" aria-label="Map of simulated beetle pressure across Minnesota"></svg></div><button class="reset" id="reset" type="button" hidden>Show all Minnesota</button><div class="read" id="read">Hover or click the map</div></div>
 </div>
 <div class="col">
@@ -80,8 +83,9 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 <div id="locbody"><p class="k" style="margin:0">Type a town, or click a trap site or anywhere on the map.</p></div>
 </div>
 <div class="card"><p class="k">State average, season</p><div class="sp"><svg id="spv"></svg></div></div>
+<details class="about"><summary>About the methods</summary>Methods: inverse distance weighting (p = 2) with contour lines; Gaussian kernel smoothing (55 km), fading where data is thin; Getis-Ord Gi* on county estimates with contiguity weights, 90/95/99% confidence, relative to each week (a real analysis would run it on raw trap counts). Suggested actions are illustrative. Vineyard traps are placed in Minnesota wine-growing towns; faint points are statewide survey traps. County shapes: US Census via us-atlas. All beetle counts are simulated.</details>
 </div>
-<div class="foot">Methods: inverse distance weighting (p = 2) with contour lines; Gaussian kernel smoothing (55 km), fading where data is thin; Getis-Ord Gi* on county estimates with contiguity weights, 90/95/99% confidence, relative to each week (a real analysis would run it on raw trap counts). Suggested actions are illustrative. Vineyard traps are placed in Minnesota wine-growing towns; faint points are statewide survey traps. County shapes: US Census via us-atlas. All beetle counts are simulated.</div>
+
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
@@ -118,7 +122,10 @@ const off=document.createElement('canvas'),octx=off.getContext('2d');const ST=3;
 const stage=document.getElementById('stage'),rb=document.getElementById('reset');
 const touch=matchMedia('(hover: none)').matches;
 function setProj(){const s=proj0.scale(),[a,b]=proj0.translate();proj=d3.geoConicEqualArea().parallels([43.5,49]).rotate([94,0]).scale(s*T.k).translate([a*T.k+T.x,b*T.k+T.y]);path=d3.geoPath(proj)}
-function buildGrid(){gw=Math.ceil(Wd/ST);gh=Math.ceil(Ht/ST);off.width=gw;off.height=gh;ll=new Array(gw*gh);
+const mk=document.createElement('canvas'),mctx=mk.getContext('2d',{willReadFrequently:true});let mask;
+function buildMask(){mk.width=Wd;mk.height=Ht;mctx.clearRect(0,0,Wd,Ht);mctx.beginPath();d3.geoPath(proj,mctx)(outline);mctx.fillStyle='#000';mctx.fill();mask=mctx.getImageData(0,0,Wd,Ht).data}
+const inMap=(x,y)=>{x=Math.round(x);y=Math.round(y);return x>=0&&y>=0&&x<Wd&&y<Ht&&mask[(y*Wd+x)*4+3]>0};
+function buildGrid(){buildMask();gw=Math.ceil(Wd/ST);gh=Math.ceil(Ht/ST);off.width=gw;off.height=gh;ll=new Array(gw*gh);
 for(let y=0;y<gh;y++)for(let x=0;x<gw;x++)ll[y*gw+x]=proj.invert([x*ST+ST/2,y*ST+ST/2]);
 const N=S.length;WI=new Float32Array(gw*gh*N);WK=new Float32Array(gw*gh*N);CA=new Float32Array(gw*gh);
 for(let i=0;i<gw*gh;i++){const p=ll[i];if(!p)continue;let si=0,sk=0,hit=-1;for(let j=0;j<N;j++){const k=km(p[0],p[1],S[j][1],S[j][2]);if(k<1)hit=j;const a=1/(k*k+1e-9),b=Math.exp(-(k*k)/(2*H*H));WI[i*N+j]=a;WK[i*N+j]=b;si+=a;sk+=b}
@@ -132,7 +139,8 @@ zb.extent([[0,0],[Wd,Ht]]).translateExtent([[0,0],[Wd,Ht]]);ov.call(zb);if(touch
 setProj();buildGrid();
 ov.selectAll('*').remove();ov.append('g').attr('id','cont');ov.append('g').attr('id','cty');ov.append('path').attr('id','out');ov.append('g').attr('id','sites');ov.append('g').attr('id','pin');
 render();if(pin)zoomTo(pin)}
-function render(){
+let lastWi=-1;
+function render(fast){
 const v=at(t),wi=Math.round(t);
 document.getElementById('wk').textContent=weeks[wi];document.getElementById('sl').value=wi;
 ctx.clearRect(0,0,Wd,Ht);let g=null;
@@ -141,8 +149,8 @@ else{const img=octx.createImageData(gw,gh),vals=new Float64Array(gw*gh);
 const N=S.length,Wm=m==='idw'?WI:WK,D=img.data;
 for(let i=0;i<gw*gh;i++){if(!ll[i])continue;let val=0;const o=i*N;for(let j=0;j<N;j++)val+=Wm[o+j]*v[j];vals[i]=val;const c=LUT[Math.max(0,Math.min(120,Math.round(val)))];D[i*4]=c.r;D[i*4+1]=c.g;D[i*4+2]=c.b;D[i*4+3]=m==='kern'?255*(.15+.85*CA[i]):255}
 octx.putImageData(img,0,0);ctx.save();ctx.beginPath();d3.geoPath(proj,ctx)(outline);ctx.clip();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(off,0,0,gw*ST,gh*ST);ctx.restore();
-const cs=d3.contours().size([gw,gh]).thresholds([20,40,60,80,100])(Array.from(vals));const tf=d3.geoPath(d3.geoTransform({point(x,y){this.stream.point(x*ST,y*ST)}}));
-d3.select('#cont').attr('clip-path','url(#clp)').selectAll('path').data(cs).join('path').attr('d',tf).attr('fill','none').attr('stroke',d=>d.value>=60?'rgba(27,15,6,.55)':'rgba(238,241,234,.22)').attr('stroke-width',.9)}
+if(fast){d3.select('#cont').selectAll('*').remove()}else{const cs=d3.contours().size([gw,gh]).thresholds([20,40,60,80,100])(Array.from(vals));const tf=d3.geoPath(d3.geoTransform({point(x,y){this.stream.point(x*ST,y*ST)}}));
+d3.select('#cont').attr('clip-path','url(#clp)').selectAll('path').data(cs).join('path').attr('d',tf).attr('fill','none').attr('stroke',d=>d.value>=60?'rgba(27,15,6,.55)':'rgba(238,241,234,.22)').attr('stroke-width',.9)}}
 if(!document.getElementById('clp')){ov.insert('defs',':first-child').append('clipPath').attr('id','clp').append('path')}d3.select('#clp path').attr('d',path(outline));
 d3.select('#cty').selectAll('path').data(counties).join('path').attr('d',path).attr('fill','none').attr('stroke','rgba(11,20,16,.5)').attr('stroke-width',.6);
 d3.select('#out').attr('d',path(outline)).attr('fill','none').attr('stroke','#5f7366').attr('stroke-width',1);
@@ -150,9 +158,9 @@ const sg=d3.select('#sites').selectAll('circle').data(S).join('circle');
 sg.attr('cx',d=>proj([d[1],d[2]])[0]).attr('cy',d=>proj([d[1],d[2]])[1]).attr('r',(d,i)=>(2.5+Math.sqrt(v[i])*.5)*Math.min(1,Wd/680)*(1+(T.k-1)*.12)).attr('stroke-width',1.2).attr('fill',d=>d[4]?'rgba(238,241,234,.35)':'rgba(238,241,234,.92)').attr('stroke','#0b1410');
 const pg=d3.select('#pin').selectAll('g').data(pin?[pin]:[]).join(e=>{const q=e.append('g');q.append('circle').attr('r',13).attr('fill','none').attr('stroke','#fbe0c0').attr('stroke-width',1.5).attr('opacity',.6);q.append('circle').attr('r',5).attr('fill','#fbe0c0').attr('stroke','#0b1410').attr('stroke-width',2);return q});
 pg.attr('transform',d=>`translate(${proj([d.lon,d.lat])})`);
-const gg=g||gi(v),avg=Math.round(d3.mean(v)),hot=gg.filter((c,i)=>c>=2&&idw(cent[i][0],cent[i][1],v)>=20).length;
-document.getElementById('k1').textContent=avg;document.getElementById('k2').textContent=v.filter(x=>x>=60).length;document.getElementById('k3').textContent=hot;
-legend();spark(wi);loc(v,wi)}
+const gg=g||(fast&&wi===lastWi?null:gi(v)),avg=Math.round(d3.mean(v)),hot=gg?gg.filter((c,i)=>c>=2&&idw(cent[i][0],cent[i][1],v)>=20).length:null;
+document.getElementById('k1').textContent=avg;document.getElementById('k2').textContent=v.filter(x=>x>=60).length;if(hot!==null)document.getElementById('k3').textContent=hot;
+if(!fast||wi!==lastWi){legend();spark(wi);loc(v,wi);lastWi=wi}}
 function legend(){const lg=document.getElementById('lg'),ll2=document.getElementById('lgl');
 if(m==='gi'){lg.innerHTML=['-3','-2','-1','0','1','2','3'].map(k=>`<span style="flex:1;background:${giC[k]}"></span>`).join('');ll2.innerHTML='<span>Cold spot 99%</span><span>Relative to this week</span><span>Hot spot 99%</span>'}
 else{lg.innerHTML=seq.map(c=>`<span style="flex:1;background:${c}"></span>`).join('');ll2.innerHTML=m==='kern'?'<span>0</span><span>faded = little data</span><span>120</span>':'<span>0</span><span>lines every 20</span><span>120</span>'}}
@@ -178,7 +186,7 @@ const nearSite=(x,y)=>{let bi=-1,bd=12;S.forEach((s,i)=>{const q=proj([s[1],s[2]
 ov.on('mouseleave',()=>{rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';rd.innerHTML=idle});
 ov.on('mousemove',e=>{const[x,y]=d3.pointer(e);const fr=fig.getBoundingClientRect(),cx=e.clientX-fr.left,cy=e.clientY-fr.top;rd.style.bottom='auto';rd.style.left=Math.min(cx+14,Wd-270)+'px';rd.style.top=Math.max(cy-40,4)+'px';const si=nearSite(x,y);d3.select('#sites').selectAll('circle').attr('stroke',(d,i)=>i===si?'#e08a4a':'#0b1410').attr('stroke-width',(d,i)=>i===si?3:1.2);
 if(si>=0){rd.innerHTML=`${S[si][4]?'Survey trap':'Vineyard trap'} · <b>${S[si][0]}</b> · ${Math.round(at(t)[si])} beetles per trap per day`;return}
-const p=proj.invert([x,y]);if(!p||!d3.geoContains(outline,p)){rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';rd.innerHTML=idle;return}
+const p=proj.invert([x,y]);if(!p||!inMap(x,y)){rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';rd.innerHTML=idle;return}
 const v=at(t);const val=m==='kern'?kern(p[0],p[1],v)[0]:idw(p[0],p[1],v);rd.innerHTML=`${p[1].toFixed(2)}°N ${(-p[0]).toFixed(2)}°W · estimate <b>${Math.round(val)}</b>`});
 ov.on('click',e=>{const[x,y]=d3.pointer(e);const si=nearSite(touch?x+0:x,y);if(si>=0){setPin({n:S[si][0]+(S[si][4]?' survey trap':' vineyard trap'),lon:S[si][1],lat:S[si][2]});return}const p=proj.invert([x,y]);if(!p||!d3.geoContains(outline,p))return;
 const ci=counties.findIndex(f=>d3.geoContains(f,p));setPin({n:ci>=0?`Point in ${counties[ci].properties.n} County`:'Selected point',lon:p[0],lat:p[1]})});
@@ -199,7 +207,7 @@ document.getElementById('sf').addEventListener('submit',e=>e.preventDefault());
 document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{m=b.dataset.m;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));render()}));
 document.getElementById('sl').addEventListener('input',e=>{t=+e.target.value;render()});
 let raf=null,last=0;const pb=document.getElementById('play');
-const stepf=ts=>{if(!last)last=ts;t+=(ts-last)/1100;last=ts;if(t>10){t=0}render();raf=requestAnimationFrame(stepf)};
+const stepf=ts=>{if(!last)last=ts;t+=(ts-last)/1100;last=ts;if(t>10){t=0}render(true);raf=requestAnimationFrame(stepf)};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 pb.addEventListener('click',()=>{if(raf){reduce?clearInterval(raf):cancelAnimationFrame(raf);raf=null;t=Math.round(t);render();pb.textContent='▶';pb.setAttribute('aria-label','Play');return}
 pb.textContent='❚❚';pb.setAttribute('aria-label','Pause');last=0;if(reduce){raf=setInterval(()=>{t=(Math.round(t)+1)%11;render()},900)}else raf=requestAnimationFrame(stepf)});
