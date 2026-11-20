@@ -10,7 +10,7 @@
 *{box-sizing:border-box;min-width:0}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
-.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);height:100vh;height:100dvh;gap:20px 24px;max-width:1320px;margin:0 auto;padding:clamp(14px,2.4vw,32px) max(4vw,16px)}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);height:100vh;height:100dvh;gap:20px 24px;max-width:1320px;margin:0 auto;box-sizing:border-box;padding:clamp(14px,2.4vw,32px) max(4vw,16px)}
 .head{grid-column:1/-1;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
 .mapcell{min-height:0;display:flex}
 details.about{font-size:12px;color:var(--dim);line-height:1.5}details.about summary{cursor:pointer;color:var(--mute);font-size:12px;padding:4px 0}
@@ -54,10 +54,13 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 .sug li[aria-selected=true],.sug li:hover{background:#22362b}
 .sug li span{font-size:12px;color:var(--mute)}
 .sug mark{background:none;color:var(--cu);font-weight:600}
+.side{display:grid;gap:14px;align-content:start;min-height:0;max-height:100%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#22332a transparent;padding-right:4px}
+.side .col{max-height:none;overflow:visible;padding-right:0}
+@media(min-width:1240px){.app{grid-template-columns:minmax(260px,330px) minmax(0,1fr) minmax(290px,360px);grid-template-areas:"head head head" "ctrl map info";max-width:1720px;column-gap:clamp(20px,2.5vw,48px)}.head{grid-area:head}.mapcell{grid-area:map}.side{display:contents}.ctrl{grid-area:ctrl;max-height:100%;overflow-y:auto}.info{grid-area:info;max-height:100%;overflow-y:auto}}
 @media(hover:none){.hz{display:none}}
 .err{color:#f2a07a;font-size:13px;min-height:18px;margin:6px 0 0}
 .foot{grid-column:1/-1;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
-@media(max-width:880px){.app{height:auto;grid-template-rows:none}.mapcell{display:block}.col{max-height:none;overflow:visible;padding-right:0}.fig{height:auto;aspect-ratio:.86}.app{grid-template-columns:minmax(0,1fr);gap:20px}.wk{font-size:40px}.kpis{gap:18px}.kpi b{font-size:22px}.read{font-size:11px}.reset{top:8px;right:8px}}
+@media(max-width:880px){.side{max-height:none;overflow:visible;padding-right:0}.app{height:auto;grid-template-rows:none}.mapcell{display:block}.col{max-height:none;overflow:visible;padding-right:0}.fig{height:auto;aspect-ratio:.86}.app{grid-template-columns:minmax(0,1fr);gap:20px}.wk{font-size:40px}.kpis{gap:18px}.kpi b{font-size:22px}.read{font-size:11px}.reset{top:8px;right:8px}}
 </style>
 </head>
 <body>
@@ -69,14 +72,16 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 <div class="mapcell">
 <div class="fig" id="fig"><div class="stage" id="stage"><canvas id="cv"></canvas><svg id="ov" role="img" aria-label="Map of simulated beetle pressure across Minnesota"></svg></div><button class="reset" id="reset" type="button" hidden>Show all Minnesota</button><div class="read" id="read">Hover or click the map</div></div>
 </div>
-<div class="col">
+<div class="side" id="side">
+<div class="ctrl col">
 <div><p class="k">Week of</p><div class="wk" id="wk"></div><p class="k" style="margin-top:6px">Beetles per trap per day</p></div>
 <div class="seg" role="group" aria-label="Method">
 <button data-m="idw" aria-pressed="true">IDW</button><button data-m="kern" aria-pressed="false">Kernel</button><button data-m="gi" aria-pressed="false">Hot spots</button>
 </div>
 <div><div class="time"><button class="play" id="play" aria-label="Play">▶</button><input type="range" id="sl" min="0" max="10" step="1" value="4" aria-label="Week"></div><div class="ticks"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div></div>
 <div><div class="lg" id="lg"></div><div class="lgl" id="lgl"></div><div class="lgl" style="justify-content:flex-start;gap:16px;margin-top:10px;white-space:nowrap;flex-wrap:wrap"><span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#eef1ea;margin-right:6px"></span>Vineyard trap</span><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:rgba(238,241,234,.35);margin-right:6px"></span>Survey trap</span><span>Size = count</span></div><div class="lgl hz" style="justify-content:flex-start;margin-top:4px;color:var(--dim)">Scroll to zoom · drag to pan · Esc to reset</div></div>
-<div class="card loc">
+</div>
+<div class="info col"><div class="card loc">
 <p class="k">Check a place</p>
 <form class="search ac" id="sf"><input id="q" placeholder="Search a town or county" aria-label="Town or county" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sug"><ul class="sug" id="sug" role="listbox" hidden></ul></form>
 <p class="err" id="err"></p>
@@ -85,7 +90,7 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 <div class="card"><p class="k">State average, season</p><div class="sp"><svg id="spv"></svg></div></div>
 <details class="about"><summary>About the methods</summary>Methods: inverse distance weighting (p = 2) with contour lines; Gaussian kernel smoothing (55 km), fading where data is thin; Getis-Ord Gi* on county estimates with contiguity weights, 90/95/99% confidence, relative to each week (a real analysis would run it on raw trap counts). Suggested actions are illustrative. Vineyard traps are placed in Minnesota wine-growing towns; faint points are statewide survey traps. County shapes: US Census via us-atlas. All beetle counts are simulated.</details>
 </div>
-
+</div>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
