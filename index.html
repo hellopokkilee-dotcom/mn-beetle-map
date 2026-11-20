@@ -47,6 +47,7 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 .tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
 .read{position:absolute;left:12px;bottom:12px;transform:translate(0,0);transition:opacity .15s;max-width:260px;font-size:12px;color:var(--mute);background:rgba(11,20,16,.82);padding:6px 10px;border-radius:8px;font-variant-numeric:tabular-nums;pointer-events:none}
 .read b{color:var(--ink);font-weight:600}
+.read.idle{opacity:0}
 .sp{height:84px;position:relative}.sp svg{position:absolute;inset:0;width:100%;height:100%}
 .ac{position:relative}
 .sug{position:absolute;left:0;right:0;top:50px;z-index:5;margin:0;padding:6px;list-style:none;background:#18271f;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.45)}
@@ -79,7 +80,8 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 <button data-m="idw" aria-pressed="true">IDW</button><button data-m="kern" aria-pressed="false">Kernel</button><button data-m="gi" aria-pressed="false">Hot spots</button>
 </div>
 <div><div class="time"><button class="play" id="play" aria-label="Play">▶</button><input type="range" id="sl" min="0" max="10" step="1" value="4" aria-label="Week"></div><div class="ticks"><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div></div>
-<div><div class="lg" id="lg"></div><div class="lgl" id="lgl"></div><div class="lgl" style="justify-content:flex-start;gap:16px;margin-top:10px;white-space:nowrap;flex-wrap:wrap"><span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#eef1ea;margin-right:6px"></span>Vineyard trap</span><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:rgba(238,241,234,.35);margin-right:6px"></span>Survey trap</span><span>Size = count</span></div><div class="lgl hz" style="justify-content:flex-start;margin-top:4px;color:var(--dim)">Scroll to zoom · drag to pan · Esc to reset</div></div>
+<div><div class="lg" id="lg"></div><div class="lgl" id="lgl"></div><div class="lgl" style="justify-content:flex-start;gap:16px;margin-top:10px;white-space:nowrap;flex-wrap:wrap"><span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#eef1ea;margin-right:6px"></span>Vineyard trap</span><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:rgba(238,241,234,.35);margin-right:6px"></span>Survey trap</span><span>Size = count</span></div><div class="lgl" style="justify-content:flex-start;margin-top:4px;color:var(--dim)"><span class="hz">Click to inspect · scroll to zoom · drag to pan · Esc to reset</span></div></div>
+<div class="card"><p class="k">State average, season</p><div class="sp"><svg id="spv"></svg></div></div>
 </div>
 <div class="info col"><div class="card loc">
 <p class="k">Check a place</p>
@@ -87,7 +89,6 @@ input[type=range]{flex:1;accent-color:var(--cu);height:44px}
 <p class="err" id="err"></p>
 <div id="locbody"><p class="k" style="margin:0">Type a town, or click a trap site or anywhere on the map.</p></div>
 </div>
-<div class="card"><p class="k">State average, season</p><div class="sp"><svg id="spv"></svg></div></div>
 <details class="about"><summary>About the methods</summary>Methods: inverse distance weighting (p = 2) with contour lines; Gaussian kernel smoothing (55 km), fading where data is thin; Getis-Ord Gi* on county estimates with contiguity weights, 90/95/99% confidence, relative to each week (a real analysis would run it on raw trap counts). Suggested actions are illustrative. Vineyard traps are placed in Minnesota wine-growing towns; faint points are statewide survey traps. County shapes: US Census via us-atlas. All beetle counts are simulated.</details>
 </div>
 </div>
@@ -142,8 +143,8 @@ function layout(){Wd=fig.clientWidth;Ht=fig.clientHeight;const r=devicePixelRati
 proj0=d3.geoConicEqualArea().parallels([43.5,49]).rotate([94,0]).fitExtent([[10,10],[Wd-10,Ht-10]],outline);ov.attr('viewBox',`0 0 ${Wd} ${Ht}`);
 zb.extent([[0,0],[Wd,Ht]]).translateExtent([[0,0],[Wd,Ht]]);ov.call(zb);if(touch)ov.style('touch-action','auto');T=d3.zoomIdentity;ov.property('__zoom',T);stage.style.transform='';rb.hidden=true;
 setProj();buildGrid();
-ov.selectAll('*').remove();ov.append('g').attr('id','cont');ov.append('g').attr('id','cty');ov.append('path').attr('id','out');ov.append('g').attr('id','sites');ov.append('g').attr('id','pin');
-render();if(pin)zoomTo(pin)}
+ov.selectAll('*').remove();ov.append('g').attr('id','cont');ov.append('g').attr('id','cty');ov.append('path').attr('id','out');ov.append('g').attr('id','sites');ov.append('g').attr('id','pin');{const g=ov.append('g').attr('id','sbar');g.append('line').attr('stroke','#93a598').attr('stroke-width',1.5);g.append('line').attr('class','l').attr('y1',-4).attr('y2',4).attr('stroke','#93a598');g.append('line').attr('class','r').attr('y1',-4).attr('y2',4).attr('stroke','#93a598');g.append('text').attr('y',-8).attr('text-anchor','middle').attr('fill','#93a598').attr('font-size',11)}
+render()}
 let lastWi=-1;
 function render(fast){
 const v=at(t),wi=Math.round(t);
@@ -158,6 +159,8 @@ if(fast){d3.select('#cont').selectAll('*').remove()}else{const cs=d3.contours().
 d3.select('#cont').attr('clip-path','url(#clp)').selectAll('path').data(cs).join('path').attr('d',tf).attr('fill','none').attr('stroke',d=>d.value>=60?'rgba(27,15,6,.55)':'rgba(238,241,234,.22)').attr('stroke-width',.9)}}
 if(!document.getElementById('clp')){ov.insert('defs',':first-child').append('clipPath').attr('id','clp').append('path')}d3.select('#clp path').attr('d',path(outline));
 d3.select('#cty').selectAll('path').data(counties).join('path').attr('d',path).attr('fill','none').attr('stroke','rgba(11,20,16,.5)').attr('stroke-width',.6);
+{const mid=proj.invert([Wd/2,Ht/2])||[-94,46];const mi=[25,50,100,200].find(m=>{const a=proj(mid),b=proj([mid[0]+m*1.609/(111*Math.cos(mid[1]*rad)),mid[1]]);return Math.abs(b[0]-a[0])>70})||200;const a=proj(mid),b=proj([mid[0]+mi*1.609/(111*Math.cos(mid[1]*rad)),mid[1]]);const L=Math.abs(b[0]-a[0]);
+const sb=d3.select('#sbar').attr('display',Wd<560?'none':null).attr('transform',`translate(${Wd-L-24},${Ht-26})`);sb.select('line').attr('x2',L);sb.select('.r').attr('x1',L).attr('x2',L);sb.select('text').attr('x',L/2).text(mi+' mi')}
 d3.select('#out').attr('d',path(outline)).attr('fill','none').attr('stroke','#5f7366').attr('stroke-width',1);
 const sg=d3.select('#sites').selectAll('circle').data(S).join('circle');
 sg.attr('cx',d=>proj([d[1],d[2]])[0]).attr('cy',d=>proj([d[1],d[2]])[1]).attr('r',(d,i)=>(2.5+Math.sqrt(v[i])*.5)*Math.min(1,Wd/680)*(1+(T.k-1)*.12)).attr('stroke-width',1.2).attr('fill',d=>d[4]?'rgba(238,241,234,.35)':'rgba(238,241,234,.92)').attr('stroke','#0b1410');
@@ -186,13 +189,13 @@ const reduce0=matchMedia('(prefers-reduced-motion: reduce)').matches;
 rb.addEventListener('click',()=>zoomTo(null));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&T.k>1.05)zoomTo(null)});
 
-const rd=document.getElementById('read');const idle=touch?'Tap the map or a trap site':'Hover or click the map';rd.innerHTML=idle;
+const rd=document.getElementById('read');const idle='';rd.classList.add('idle');const showRd=h=>{rd.innerHTML=h;rd.classList.toggle('idle',!h)};
 const nearSite=(x,y)=>{let bi=-1,bd=12;S.forEach((s,i)=>{const q=proj([s[1],s[2]]);const d=Math.hypot(q[0]-x,q[1]-y);if(d<bd){bd=d;bi=i}});return bi};
-ov.on('mouseleave',()=>{rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';rd.innerHTML=idle});
+ov.on('mouseleave',()=>{rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';showRd(idle)});
 ov.on('mousemove',e=>{const[x,y]=d3.pointer(e);const fr=fig.getBoundingClientRect(),cx=e.clientX-fr.left,cy=e.clientY-fr.top;rd.style.bottom='auto';rd.style.left=Math.min(cx+14,Wd-270)+'px';rd.style.top=Math.max(cy-40,4)+'px';const si=nearSite(x,y);d3.select('#sites').selectAll('circle').attr('stroke',(d,i)=>i===si?'#e08a4a':'#0b1410').attr('stroke-width',(d,i)=>i===si?3:1.2);
-if(si>=0){rd.innerHTML=`${S[si][4]?'Survey trap':'Vineyard trap'} · <b>${S[si][0]}</b> · ${Math.round(at(t)[si])} beetles per trap per day`;return}
-const p=proj.invert([x,y]);if(!p||!inMap(x,y)){rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';rd.innerHTML=idle;return}
-const v=at(t);const val=m==='kern'?kern(p[0],p[1],v)[0]:idw(p[0],p[1],v);rd.innerHTML=`${p[1].toFixed(2)}°N ${(-p[0]).toFixed(2)}°W · estimate <b>${Math.round(val)}</b>`});
+if(si>=0){showRd(`${S[si][4]?'Survey trap':'Vineyard trap'} · <b>${S[si][0]}</b> · ${Math.round(at(t)[si])} beetles per trap per day`);return}
+const p=proj.invert([x,y]);if(!p||!inMap(x,y)){rd.style.left='12px';rd.style.top='';rd.style.bottom='12px';showRd(idle);return}
+const v=at(t);const val=m==='kern'?kern(p[0],p[1],v)[0]:idw(p[0],p[1],v);showRd(`${p[1].toFixed(2)}°N ${(-p[0]).toFixed(2)}°W · estimate <b>${Math.round(val)}</b>`)});
 ov.on('click',e=>{const[x,y]=d3.pointer(e);const si=nearSite(touch?x+0:x,y);if(si>=0){setPin({n:S[si][0]+(S[si][4]?' survey trap':' vineyard trap'),lon:S[si][1],lat:S[si][2]});return}const p=proj.invert([x,y]);if(!p||!d3.geoContains(outline,p))return;
 const ci=counties.findIndex(f=>d3.geoContains(f,p));setPin({n:ci>=0?`Point in ${counties[ci].properties.n} County`:'Selected point',lon:p[0],lat:p[1]})});
 const qi=document.getElementById('q'),sug=document.getElementById('sug'),er=document.getElementById('err');let hits=[],hi=0;
@@ -216,6 +219,7 @@ const stepf=ts=>{if(!last)last=ts;t+=(ts-last)/1100;last=ts;if(t>10){t=0}render(
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 pb.addEventListener('click',()=>{if(raf){reduce?clearInterval(raf):cancelAnimationFrame(raf);raf=null;t=Math.round(t);render();pb.textContent='▶';pb.setAttribute('aria-label','Play');return}
 pb.textContent='❚❚';pb.setAttribute('aria-label','Pause');last=0;if(reduce){raf=setInterval(()=>{t=(Math.round(t)+1)%11;render()},900)}else raf=requestAnimationFrame(stepf)});
+pin={n:'Shakopee',ty:'Town',lon:-93.52,lat:44.80};
 new ResizeObserver(layout).observe(fig);
 }
 </script>
