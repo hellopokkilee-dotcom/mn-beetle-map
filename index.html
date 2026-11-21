@@ -124,21 +124,21 @@ const risk=v=>v>=80?['Severe','#e2553b','Check vines daily and act on hot rows n
 let t=4,m='idw',pin=null,proj0,proj,path,Wd,Ht,WI,WK,CA,T=d3.zoomIdentity;
 const LUT=d3.range(121).map(i=>d3.rgb(sc(i)));
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),ov=d3.select('#ov'),fig=document.getElementById('fig');
-const off=document.createElement('canvas'),octx=off.getContext('2d');const ST=3;let gw,gh,ll;
+const off=document.createElement('canvas'),octx=off.getContext('2d');const ST=3;let ck='',cs0=null;let gw,gh,ll;
 const stage=document.getElementById('stage'),rb=document.getElementById('reset');
 const touch=matchMedia('(hover: none)').matches;
 function setProj(){const s=proj0.scale(),[a,b]=proj0.translate();proj=d3.geoConicEqualArea().parallels([43.5,49]).rotate([94,0]).scale(s*T.k).translate([a*T.k+T.x,b*T.k+T.y]);path=d3.geoPath(proj)}
 const mk=document.createElement('canvas'),mctx=mk.getContext('2d',{willReadFrequently:true});let mask;
-function buildMask(){mk.width=Wd;mk.height=Ht;mctx.clearRect(0,0,Wd,Ht);mctx.beginPath();d3.geoPath(proj,mctx)(outline);mctx.fillStyle='#000';mctx.fill();mask=mctx.getImageData(0,0,Wd,Ht).data}
-const inMap=(x,y)=>{x=Math.round(x);y=Math.round(y);return x>=0&&y>=0&&x<Wd&&y<Ht&&mask[(y*Wd+x)*4+3]>0};
-function buildGrid(){buildMask();gw=Math.ceil(Wd/ST);gh=Math.ceil(Ht/ST);off.width=gw;off.height=gh;ll=new Array(gw*gh);
-for(let y=0;y<gh;y++)for(let x=0;x<gw;x++)ll[y*gw+x]=proj.invert([x*ST+ST/2,y*ST+ST/2]);
+function buildMask(){mk.width=Wd;mk.height=Ht;mctx.clearRect(0,0,Wd,Ht);mctx.beginPath();d3.geoPath(proj0,mctx)(outline);mctx.fillStyle='#000';mctx.fill();mask=mctx.getImageData(0,0,Wd,Ht).data}
+const inMap=(x,y)=>{x=Math.round((x-T.x)/T.k);y=Math.round((y-T.y)/T.k);return x>=0&&y>=0&&x<Wd&&y<Ht&&mask[(y*Wd+x)*4+3]>0};
+function buildGrid(){ck='';buildMask();gw=Math.ceil(Wd/ST);gh=Math.ceil(Ht/ST);off.width=gw;off.height=gh;ll=new Array(gw*gh);
+for(let y=0;y<gh;y++)for(let x=0;x<gw;x++)ll[y*gw+x]=proj0.invert([x*ST+ST/2,y*ST+ST/2]);
 const N=S.length;WI=new Float32Array(gw*gh*N);WK=new Float32Array(gw*gh*N);CA=new Float32Array(gw*gh);
 for(let i=0;i<gw*gh;i++){const p=ll[i];if(!p)continue;let si=0,sk=0,hit=-1;for(let j=0;j<N;j++){const k=km(p[0],p[1],S[j][1],S[j][2]);if(k<1)hit=j;const a=1/(k*k+1e-9),b=Math.exp(-(k*k)/(2*H*H));WI[i*N+j]=a;WK[i*N+j]=b;si+=a;sk+=b}
 for(let j=0;j<N;j++){WI[i*N+j]=hit>=0?(j===hit?1:0):WI[i*N+j]/si;WK[i*N+j]=sk>1e-6?WK[i*N+j]/sk:0}CA[i]=Math.min(1,sk/.9)}}
 const zb=d3.zoom().scaleExtent([1,8]).filter(e=>!touch&&!e.button&&e.type!=='dblclick')
 .on('zoom',e=>{const L=e.transform,r=L.k/T.k;stage.style.transform=`translate(${L.x-T.x*r}px,${L.y-T.y*r}px) scale(${r})`;rb.hidden=L.k<1.05})
-.on('end',e=>{T=e.transform;stage.style.transform='';setProj();buildGrid();render();rb.hidden=T.k<1.05});
+.on('end',e=>{T=e.transform;stage.style.transform='';setProj();render();rb.hidden=T.k<1.05});
 function layout(){Wd=fig.clientWidth;Ht=fig.clientHeight;const r=devicePixelRatio||1;cv.width=Wd*r;cv.height=Ht*r;ctx.setTransform(r,0,0,r,0,0);
 proj0=d3.geoConicEqualArea().parallels([43.5,49]).rotate([94,0]).fitExtent([[10,10],[Wd-10,Ht-10]],outline);ov.attr('viewBox',`0 0 ${Wd} ${Ht}`);
 zb.extent([[0,0],[Wd,Ht]]).translateExtent([[0,0],[Wd,Ht]]);ov.call(zb);if(touch)ov.style('touch-action','auto');T=d3.zoomIdentity;ov.property('__zoom',T);stage.style.transform='';rb.hidden=true;
@@ -151,12 +151,12 @@ const v=at(t),wi=Math.round(t);
 document.getElementById('wk').textContent=weeks[wi];document.getElementById('sl').value=wi;
 ctx.clearRect(0,0,Wd,Ht);let g=null;
 if(m==='gi'){g=gi(v);counties.forEach((f,i)=>{ctx.beginPath();d3.geoPath(proj,ctx)(f);ctx.fillStyle=giC[g[i]];ctx.fill()});d3.select('#cont').selectAll('*').remove()}
-else{const img=octx.createImageData(gw,gh),vals=new Float64Array(gw*gh);
+else{const key=m+'|'+t+'|'+gw+'x'+gh;if(key!==ck){ck=key;const img=octx.createImageData(gw,gh),vals=new Float64Array(gw*gh);
 const N=S.length,Wm=m==='idw'?WI:WK,D=img.data;
 for(let i=0;i<gw*gh;i++){if(!ll[i])continue;let val=0;const o=i*N;for(let j=0;j<N;j++)val+=Wm[o+j]*v[j];vals[i]=val;const c=LUT[Math.max(0,Math.min(120,Math.round(val)))];D[i*4]=c.r;D[i*4+1]=c.g;D[i*4+2]=c.b;D[i*4+3]=m==='kern'?255*(.15+.85*CA[i]):255}
-octx.putImageData(img,0,0);ctx.save();ctx.beginPath();d3.geoPath(proj,ctx)(outline);ctx.clip();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(off,0,0,gw*ST,gh*ST);ctx.restore();
-if(fast){d3.select('#cont').selectAll('*').remove()}else{const cs=d3.contours().size([gw,gh]).thresholds([20,40,60,80,100])(Array.from(vals));const tf=d3.geoPath(d3.geoTransform({point(x,y){this.stream.point(x*ST,y*ST)}}));
-d3.select('#cont').attr('clip-path','url(#clp)').selectAll('path').data(cs).join('path').attr('d',tf).attr('fill','none').attr('stroke',d=>d.value>=60?'rgba(27,15,6,.55)':'rgba(238,241,234,.22)').attr('stroke-width',.9)}}
+octx.putImageData(img,0,0);cs0=d3.contours().size([gw,gh]).thresholds([20,40,60,80,100])(Array.from(vals))}ctx.save();ctx.beginPath();d3.geoPath(proj,ctx)(outline);ctx.clip();ctx.translate(T.x,T.y);ctx.scale(T.k,T.k);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(off,0,0,gw*ST,gh*ST);ctx.restore();
+{const cs=cs0;const tf=d3.geoPath(d3.geoTransform({point(x,y){this.stream.point(x*ST*T.k+T.x,y*ST*T.k+T.y)}}));
+d3.select('#cont').attr('clip-path','url(#clp)').selectAll('path').data(cs).join('path').attr('d',tf).attr('fill','none').attr('stroke',d=>d.value>=60?'rgba(27,15,6,.6)':'rgba(238,241,234,.38)').attr('stroke-width',1.1).attr('stroke-linejoin','round')}}
 if(!document.getElementById('clp')){ov.insert('defs',':first-child').append('clipPath').attr('id','clp').append('path')}d3.select('#clp path').attr('d',path(outline));
 d3.select('#cty').selectAll('path').data(counties).join('path').attr('d',path).attr('fill','none').attr('stroke','rgba(11,20,16,.5)').attr('stroke-width',.6);
 {const mid=proj.invert([Wd/2,Ht/2])||[-94,46];const mi=[25,50,100,200].find(m=>{const a=proj(mid),b=proj([mid[0]+m*1.609/(111*Math.cos(mid[1]*rad)),mid[1]]);return Math.abs(b[0]-a[0])>70})||200;const a=proj(mid),b=proj([mid[0]+mi*1.609/(111*Math.cos(mid[1]*rad)),mid[1]]);const L=Math.abs(b[0]-a[0]);
